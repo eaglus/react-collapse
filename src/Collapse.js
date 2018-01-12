@@ -5,12 +5,10 @@ import {Motion, spring} from 'react-motion';
 
 const SPRING_PRECISION = 1;
 
-
 const WAITING = 'WAITING';
 const RESIZING = 'RESIZING';
 const RESTING = 'RESTING';
 const IDLING = 'IDLING';
-
 
 const noop = () => null;
 const css = {
@@ -18,6 +16,9 @@ const css = {
   content: 'ReactCollapse--content'
 };
 
+function getContentHeightDefault(content, wrapper) {
+  return content.clientHeight;
+}
 
 export class Collapse extends React.PureComponent {
   static propTypes = {
@@ -31,6 +32,8 @@ export class Collapse extends React.PureComponent {
 
     theme: PropTypes.objectOf(PropTypes.string),
     style: PropTypes.object,
+
+    getContentHeight: PropTypes.func,
 
     onRender: PropTypes.func,
     onRest: PropTypes.func,
@@ -49,7 +52,8 @@ export class Collapse extends React.PureComponent {
     theme: css,
     onRender: noop,
     onRest: noop,
-    onMeasure: noop
+    onMeasure: noop,
+    getContentHeight: getContentHeightDefault,
   };
 
 
@@ -58,7 +62,8 @@ export class Collapse extends React.PureComponent {
     this.state = {
       currentState: IDLING,
       from: 0,
-      to: 0
+      to: 0,
+      resizingFrom: 0
     };
   }
 
@@ -79,7 +84,11 @@ export class Collapse extends React.PureComponent {
 
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.hasNestedCollapse) {
+    const {currentState, from, to, resizingFrom} = this.state;
+    if (currentState === RESIZING && nextProps.isOpened !== this.props.isOpened) {
+      this.setState({from: this.currentHeight, to: resizingFrom, resizingFrom: to});
+    }
+    else if (nextProps.hasNestedCollapse) {
       // For nested collapses we do not need to change to waiting state
       // and should keep `height:auto`
       // Because children will be animated and height will not jump anyway
@@ -88,16 +97,17 @@ export class Collapse extends React.PureComponent {
         // Still go to WAITING state if own isOpened was changed
         this.setState({currentState: WAITING});
       }
-    } else if (this.state.currentState === IDLING && (nextProps.isOpened || this.props.isOpened)) {
+    } else if (currentState === IDLING && (nextProps.isOpened || this.props.isOpened)) {
       this.setState({currentState: WAITING});
     }
   }
 
 
-  componentDidUpdate(_, prevState) {
+  componentDidUpdate(prevProps, prevState) {
     const {isOpened, onRest, onMeasure} = this.props;
+    const {currentState} = this.state;
 
-    if (this.state.currentState === IDLING) {
+    if (currentState === IDLING) {
       onRest();
       return;
     }
@@ -106,16 +116,18 @@ export class Collapse extends React.PureComponent {
       onMeasure({height: this.state.to, width: this.content.clientWidth});
     }
 
-    const from = this.wrapper.clientHeight;
-    const to = isOpened ? this.getTo() : 0;
+    if (currentState !== RESIZING) {
+      const from = this.wrapper.clientHeight;
+      const to = isOpened ? this.getTo() : 0;
 
-    if (from !== to) {
-      this.setState({currentState: RESIZING, from, to});
-      return;
-    }
+      if (from !== to) {
+        this.setState({currentState: RESIZING, from, to, resizingFrom: from});
+        return;
+      }
 
-    if (this.state.currentState === RESTING || this.state.currentState === WAITING) {
-      this.setState({currentState: IDLING, from, to});
+      if (currentState === RESTING || currentState === WAITING) {
+        this.setState({currentState: IDLING, from, to});
+      }
     }
   }
 
@@ -141,13 +153,13 @@ export class Collapse extends React.PureComponent {
 
 
   setResting = () => {
-    this.setState({currentState: RESTING});
+    this.currentHeight = undefined;
+    this.setState({currentState: RESTING, resizingFrom: undefined});
   };
 
-
   getTo = () => {
-    const {fixedHeight} = this.props;
-    return (fixedHeight > -1) ? fixedHeight : this.content.clientHeight;
+    const {fixedHeight, getContentHeight} = this.props;
+    return (fixedHeight > -1) ? fixedHeight : getContentHeight(this.content, this.wrapper);
   };
 
 
@@ -195,15 +207,20 @@ export class Collapse extends React.PureComponent {
       onRender,
       onRest: _onRest,
       onMeasure: _onMeasure,
+      getContentHeight: _getContentHeight,
       children,
       ...props
     } = this.props;
 
     const {
       from,
-      to
+      to,
+      currentState
     } = this.state;
 
+    if (currentState === RESIZING) {
+      this.currentHeight = height;
+    }
     // DANGEROUS, use with caution, never do setState with it
     onRender({current: height, from, to});
 
