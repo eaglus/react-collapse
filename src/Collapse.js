@@ -18,6 +18,9 @@ const css = {
   content: 'ReactCollapse--content'
 };
 
+function getContentHeightDefault(content, wrapper) {
+  return content.clientHeight;
+}
 
 export class Collapse extends React.PureComponent {
   static propTypes = {
@@ -31,6 +34,8 @@ export class Collapse extends React.PureComponent {
 
     theme: PropTypes.objectOf(PropTypes.string),
     style: PropTypes.object,
+
+    getContentHeight: PropTypes.func,
 
     onRender: PropTypes.func,
     onRest: PropTypes.func,
@@ -49,7 +54,8 @@ export class Collapse extends React.PureComponent {
     theme: css,
     onRender: noop,
     onRest: noop,
-    onMeasure: noop
+    onMeasure: noop,
+    getContentHeight: getContentHeightDefault,
   };
 
 
@@ -59,7 +65,7 @@ export class Collapse extends React.PureComponent {
       currentState: IDLING,
       from: 0,
       to: 0,
-      resizingFrom: undefined
+      resizingFrom: 0
     };
   }
 
@@ -98,7 +104,7 @@ export class Collapse extends React.PureComponent {
   }
 
 
-  componentDidUpdate(_, prevState) {
+  componentDidUpdate(prevProps, prevState) {
     const {isOpened, onRest, onMeasure} = this.props;
     const {currentState} = this.state;
 
@@ -154,10 +160,9 @@ export class Collapse extends React.PureComponent {
     this.setState({currentState: RESTING, resizingFrom: undefined});
   };
 
-
   getTo = () => {
-    const {fixedHeight} = this.props;
-    return (fixedHeight > -1) ? fixedHeight : this.content.clientHeight;
+    const {fixedHeight, getContentHeight} = this.props;
+    return (fixedHeight > -1) ? fixedHeight : getContentHeight(this.content, this.wrapper);
   };
 
 
@@ -205,6 +210,7 @@ export class Collapse extends React.PureComponent {
       onRender,
       onRest: _onRest,
       onMeasure: _onMeasure,
+      getContentHeight: _getContentHeight,
       children,
       ...props
     } = this.props;
