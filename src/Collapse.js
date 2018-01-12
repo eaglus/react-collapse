@@ -18,7 +18,7 @@ const css = {
   content: 'ReactCollapse--content'
 };
 
-function getContentHeightDefault(content, wrapper) {
+function getContentHeightDefault(content, _wrapper) {
   return content.clientHeight;
 }
 
@@ -55,7 +55,7 @@ export class Collapse extends React.PureComponent {
     onRender: noop,
     onRest: noop,
     onMeasure: noop,
-    getContentHeight: getContentHeightDefault,
+    getContentHeight: getContentHeightDefault
   };
 
 
