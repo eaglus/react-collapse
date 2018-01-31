@@ -1,5 +1,5 @@
 {
-  "name": "react-collapse",
+  "name": "@spotware/react-collapse",
   "version": "4.0.7",
   "description": "Component-wrapper for collapse animation with react-motion for elements with variable (and dynamic) height",
   "main": "lib/index.js",
@@ -84,7 +84,7 @@
     "portfinder": "^1.0.13",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "react-motion": "^0.5.2",
+    "@spotware/react-motion": "^0.5.2",
     "rimraf": "^2.6.2",
     "serve-static": "^1.13.1",
     "style-loader": "^0.19.1",
