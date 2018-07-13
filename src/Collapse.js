@@ -128,14 +128,12 @@ export class Collapse extends React.PureComponent {
       const from = this.wrapper.clientHeight;
       const to = isOpened ? this.getTo() : 0;
 
-      if (from !== to) {
+      if (from !== to && currentState !== RESTING) {
         this.setState({
           currentState: RESIZING, from, to, resizingFrom: from
         });
-        return;
       }
-
-      if (currentState === RESTING || currentState === WAITING) {
+      else if (currentState === RESTING || currentState === WAITING) {
         this.setState({currentState: IDLING, from, to});
       }
     }
@@ -200,8 +198,7 @@ export class Collapse extends React.PureComponent {
     } : {
       // Otherwise, animate
       defaultStyle: {height: this.state.from},
-      style: {height: spring(this.state.to, {precision: SPRING_PRECISION, ...springConfig})},
-      onRest: this.onRest
+      style: {height: spring(this.state.to, {precision: SPRING_PRECISION, ...springConfig})}
     };
   };
 
@@ -250,7 +247,7 @@ export class Collapse extends React.PureComponent {
 
   render() {
     return (
-      <Motion {...this.getMotionProps()}>
+      <Motion {...this.getMotionProps()} onRest={this.onRest}>
         {this.renderContent}
       </Motion>
     );
