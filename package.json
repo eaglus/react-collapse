@@ -1,6 +1,6 @@
 {
   "name": "@spotware/react-collapse",
-  "version": "4.0.11",
+  "version": "4.0.12",
   "description": "Component-wrapper for collapse animation with react-motion for elements with variable (and dynamic) height",
   "main": "lib/index.js",
   "config": {
