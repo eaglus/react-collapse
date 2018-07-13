@@ -200,7 +200,8 @@ export class Collapse extends React.PureComponent {
     } : {
       // Otherwise, animate
       defaultStyle: {height: this.state.from},
-      style: {height: spring(this.state.to, {precision: SPRING_PRECISION, ...springConfig})}
+      style: {height: spring(this.state.to, {precision: SPRING_PRECISION, ...springConfig})},
+      onRest: this.onRest
     };
   };
 
@@ -249,7 +250,7 @@ export class Collapse extends React.PureComponent {
 
   render() {
     return (
-      <Motion {...this.getMotionProps()} onRest={this.onRest}>
+      <Motion {...this.getMotionProps()}>
         {this.renderContent}
       </Motion>
     );
